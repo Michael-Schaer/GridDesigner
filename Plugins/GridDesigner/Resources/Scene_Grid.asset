@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11b71fd758930a94abea63359937bdd0, type: 3}
+  m_Name: Scene_Grid
+  m_EditorClassIdentifier: 
+  tilePositions:
+  - {x: 0, y: 1, z: 5}
+  - {x: 1, y: 1, z: 5}
+  - {x: 2, y: 1, z: 5}
+  - {x: -1, y: 1, z: 5}
+  - {x: -2, y: 1, z: 5}
+  - {x: 0, y: 1, z: 6}
+  - {x: 0, y: 1, z: 4}
+  - {x: 0, y: 1, z: 3}
+  - {x: 2, y: 1, z: 4}
+  - {x: 1, y: 1, z: 4}
+  - {x: -1, y: 1, z: 4}
+  - {x: -2, y: 1, z: 4}
+  - {x: 1, y: 1, z: 6}
+  - {x: -1, y: 1, z: 6}
+  - {x: 1, y: 1, z: 3}
+  - {x: -1, y: 1, z: 3}
+  - {x: 0, y: 0, z: 2}
+  - {x: 0, y: 0, z: 1}
+  - {x: 0, y: 0, z: 0}
+  - {x: -5, y: 0, z: 5}
+  - {x: -4, y: 0, z: 5}
+  - {x: -3, y: 0, z: 5}
+  - {x: 3, y: 0, z: 5}
+  - {x: 4, y: 0, z: 5}
+  - {x: 5, y: 0, z: 5}
+  startIndex: 0
+  tilePositionsGUI:
+  - {x: 0, y: 1, z: 5}
+  - {x: 1, y: 1, z: 5}
+  - {x: 2, y: 1, z: 5}
+  - {x: -1, y: 1, z: 5}
+  - {x: -2, y: 1, z: 5}
+  - {x: 0, y: 1, z: 6}
+  - {x: 0, y: 1, z: 7}
+  - {x: 0, y: 1, z: 4}
+  - {x: 0, y: 1, z: 3}
+  - {x: 2, y: 1, z: 4}
