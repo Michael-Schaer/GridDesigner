@@ -15,7 +15,6 @@ namespace GridDesigner
             this.editor = editor;
             mesh = editor.GetMesh();
             SetOffset();
-            //Debug.Log(GridBase.Instance.tilePositions[0]); /*////////*/
         }
 
         public void SetOffset()
@@ -25,7 +24,7 @@ namespace GridDesigner
 
         public void Disable()
         {
-            //Debug.Log(GridBase.Instance.tilePositions[0] + "Disable"); /*////////*/
+            //Debug.Log(GridBase.Instance.tilePositions[0] + "Disable");
         }
 
         public void ClearMesh()
@@ -39,7 +38,6 @@ namespace GridDesigner
             Vector3[] newVerts = mesh.vertices;
             System.Array.Resize(ref newVerts, vertsIndex + 4);
 
-            //TODO height
             newVerts[vertsIndex] = new Vector3(position.x + offset, position.y + editor.yOffset.floatValue, position.z + offset);
             newVerts[vertsIndex+1] = new Vector3(position.x + offset, position.y + editor.yOffset.floatValue, position.z - offset);
             newVerts[vertsIndex+2] = new Vector3(position.x - offset, position.y + editor.yOffset.floatValue, position.z + offset);
@@ -57,8 +55,18 @@ namespace GridDesigner
             newTris[trisIndex + 4] = vertsIndex + 2;
             newTris[trisIndex + 5] = vertsIndex + 1;
 
+            int uvIndex = mesh.uv.Length;
+            Vector2[] newUv = mesh.uv;
+            System.Array.Resize(ref newUv, uvIndex + 4);
+
+            newUv[uvIndex] = Vector2.one;
+            newUv[uvIndex +1] = Vector2.right;
+            newUv[uvIndex +2] = Vector2.up;
+            newUv[uvIndex +3] = Vector2.zero;
+
             mesh.vertices = newVerts;
             mesh.triangles = newTris;
+            mesh.uv = newUv;
 
             editor.SetMesh(mesh);
         }
@@ -67,6 +75,7 @@ namespace GridDesigner
         {
             Vector3[] verts = mesh.vertices;
             int[] tris = mesh.GetTriangles(0);
+            Vector2[] uv = mesh.uv;
 
             int indexToRemove = FindTileIndex(verts, position);
 
@@ -92,9 +101,17 @@ namespace GridDesigner
 
                 tris = RearrangeTris(indexToRemove + 4, tris);
 
+                uv = uv.Where((val, idx) =>
+                idx != indexToRemove &&
+                idx != indexToRemove + 1 &&
+                idx != indexToRemove + 2 &&
+                idx != indexToRemove + 3
+                ).ToArray();
+
                 ClearMesh();
                 mesh.vertices = verts;
                 mesh.triangles = tris;
+                mesh.uv = uv;
                 editor.SetMesh(mesh);
             }
         }
