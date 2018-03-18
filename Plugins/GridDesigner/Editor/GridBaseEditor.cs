@@ -115,7 +115,7 @@ namespace GridDesigner
             AssignValues();
 
             CreateBrush();
-            CheckMeshRendererEnabled();
+            HandleBrushRenderer();
         }
 
         private void OnDisable()
@@ -146,7 +146,7 @@ namespace GridDesigner
 		{
 			serializedObject.Update();
 			enableDesigner.boolValue = EditorGUILayout.Toggle("Enable Editor", enableDesigner.boolValue);
-			CheckMeshRendererEnabled();
+			HandleBrushRenderer();
             EditorGUILayout.PropertyField(storage, new GUIContent("Tiles"));
 
 			EditorGUILayout.Separator();
@@ -207,7 +207,7 @@ namespace GridDesigner
 						if (controlDown)
 						{
                             Undo.RecordObject(target, "Delete Tiles");
-                            DeleteTiles(alignedPosition);
+                            RemoveTiles(alignedPosition);
 						}
 						else
 						{
@@ -326,12 +326,6 @@ namespace GridDesigner
 			}
 		}
 
-        private void CheckMeshRendererEnabled()
-        {
-            enableDesigner.boolValue = enableDesigner.boolValue && !EditorApplication.isPlaying;
-            brush.GetComponent<MeshRenderer>().enabled = enableDesigner.boolValue;
-        }
-
         private void MoveBrush()
 		{
 			RaycastHit hitInfo = RaycastGUIToFloor(Event.current.mousePosition);
@@ -345,6 +339,12 @@ namespace GridDesigner
 				brush.transform.localScale = new Vector3(scale, scale, scale);
 			}
 		}
+        
+        private void HandleBrushRenderer()
+        {
+            enableDesigner.boolValue = enableDesigner.boolValue && !EditorApplication.isPlaying;
+            brush.GetComponent<MeshRenderer>().enabled = enableDesigner.boolValue;
+        }
 
 		private void CreateTiles(Vector3 position)
 		{
@@ -354,13 +354,13 @@ namespace GridDesigner
 			{
 				for (int z = -brushIndex.intValue; z <= brushIndex.intValue; z++)
 				{
-					CreateNewObject(new Vector3(position.x + x * tileSize, position.y, position.z + z * tileSize));
+					CreateTile(new Vector3(position.x + x * tileSize, position.y, position.z + z * tileSize));
 				}
 			}
             AssetDatabase.SaveAssets();
         }
 
-		private void DeleteTiles(Vector3 position)
+		private void RemoveTiles(Vector3 position)
 		{
 			float tileSize = gridBase.tileSize;
 
@@ -375,7 +375,7 @@ namespace GridDesigner
             AssetDatabase.SaveAssets();
         }
 
-		private void CreateNewObject(Vector3 position)
+		private void CreateTile(Vector3 position)
 		{
             // Get Floor height before generating a new Tile object
             position.y = GridUtility.FloorHeight(position);
@@ -384,11 +384,7 @@ namespace GridDesigner
             {
                 position.y = GridUtility.CheckVerticalAlignment(position.y);
             }
-            AddTile(position);
-        }
 
-        private void AddTile(Vector3 position)
-        {
             if (!gridBase.ContainsTileAt(position))
             {
                 TilePositionsProperty.arraySize++;
