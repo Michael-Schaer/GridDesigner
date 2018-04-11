@@ -10,10 +10,13 @@ namespace GridDesigner
     {
         public static GridStorageObject CreateAsset()
         {
-            GridStorageObject asset = ScriptableObject.CreateInstance<GridStorageObject>();
-
-            AssetDatabase.CreateAsset(asset, GetGridAssetPath());
-            AssetDatabase.SaveAssets();
+            GridStorageObject asset = AssetDatabase.LoadAssetAtPath(GetGridAssetPath(), typeof(GridStorageObject)) as GridStorageObject;
+            if(asset == null)
+            {
+                asset = ScriptableObject.CreateInstance<GridStorageObject>();
+                AssetDatabase.CreateAsset(asset, GetGridAssetPath());
+                AssetDatabase.SaveAssets();
+            }
 
             EditorUtility.FocusProjectWindow();
 
@@ -96,6 +99,8 @@ namespace GridDesigner
                     if(gridBase.storage != null)
                     {
                         tilePositionsProperty = new SerializedObject(gridBase.storage).FindProperty("tilePositions");
+                        ReplaceTiles();
+                        Debug.Log("Repainted all tiles");
                     }
                 }
                 return tilePositionsProperty;
@@ -106,7 +111,7 @@ namespace GridDesigner
                 tilePositionsProperty = value;
             }
         }
-
+        
         private void OnEnable()
         {
             gridBase = (GridBase)target;
@@ -116,31 +121,19 @@ namespace GridDesigner
 
             CreateBrush();
             HandleBrushRenderer();
+
+            Undo.undoRedoPerformed += OnUndoRedo;
         }
 
         private void OnDisable()
 		{
-            if(meshPainter != null)
-            {
-                meshPainter.Disable();
-            }
+            Undo.undoRedoPerformed -= OnUndoRedo;
 
             if(brush != null && brush.GetComponent<MeshRenderer>() != null)
             {
                 brush.GetComponent<MeshRenderer>().enabled = false;
             }
 		}
-
-        public void SetMesh(Mesh mesh)
-        {
-            Undo.RecordObject(gridBase.meshFilter, "MeshFilter mesh change");
-            gridBase.meshFilter.sharedMesh = mesh;
-        }
-
-        public Mesh GetMesh()
-        {
-            return gridBase.meshFilter.sharedMesh;
-        }
 
         public override void OnInspectorGUI()
 		{
@@ -155,7 +148,7 @@ namespace GridDesigner
             EditorGUILayout.Separator();
             EditorGUILayout.PropertyField(tileScale, new GUIContent("Tile Scale"));
             EditorGUILayout.PropertyField(yOffset, new GUIContent("Y offset"));
-            if (GUILayout.Button("Apply to all"))
+            if (GUILayout.Button("Redraw"))
             {
                 ReplaceTiles();
             }
@@ -206,12 +199,10 @@ namespace GridDesigner
 					{
 						if (controlDown)
 						{
-                            Undo.RecordObject(target, "Delete Tiles");
                             RemoveTiles(alignedPosition);
 						}
 						else
 						{
-                            Undo.RecordObject(target, "Create Tiles");
                             CreateTiles(alignedPosition);
 						}
 						current.Use();
@@ -245,6 +236,11 @@ namespace GridDesigner
             }
 		}
 
+        // Make sure to repaint the Mesh when Undo or Redo is used
+        private void OnUndoRedo() {
+            ReplaceTiles();
+        }
+
         private void CreateSceneAssets()
         {
             if (gridBase.meshFilter == null)
@@ -254,16 +250,19 @@ namespace GridDesigner
 
             if (gridBase.meshFilter.sharedMesh == null)
             {
-                // Create Mesh Asset
-                Mesh newMesh = new Mesh();
-                Undo.RegisterCreatedObjectUndo(newMesh, "MeshFilter mesh change");
-                gridBase.meshFilter.sharedMesh = newMesh;
-                AssetDatabase.CreateAsset(gridBase.meshFilter.sharedMesh, RESOURCES_PATH + EditorSceneManager.GetActiveScene().name + "_Mesh.asset");
-                AssetDatabase.SaveAssets();
+                CreateMeshAsset();
 
                 // Create GridStorage Asset
                 gridBase.storage = GridStorageObjectFactory.CreateAsset();
             }
+        }
+
+        private void CreateMeshAsset()
+        {
+            Mesh newMesh = new Mesh();
+            gridBase.meshFilter.sharedMesh = newMesh;
+            AssetDatabase.CreateAsset(gridBase.meshFilter.sharedMesh, RESOURCES_PATH + EditorSceneManager.GetActiveScene().name + "_Mesh.asset");
+            AssetDatabase.SaveAssets();
         }
 
         private void AssignValues()
@@ -290,16 +289,18 @@ namespace GridDesigner
             CreateSceneAssets();
     
             meshPainter = new MeshPainter();
-            meshPainter.Enable(this);
+            meshPainter.Enable();
         }
 
         public void ClearGrid()
         {
-            if (gridBase.meshFilter != null)
+            if (gridBase.GetComponent<MeshFilter>() != null)
             {
-                gridBase.meshFilter.sharedMesh = new Mesh();
+                //gridBase.GetComponent<MeshFilter>().sharedMesh = new Mesh();
+                CreateMeshAsset();
             }
 
+            TilePositionsProperty.serializedObject.ApplyModifiedProperties();
             for (int x = gridBase.storage.tilePositions.Count - 1; x >= 0; x--)
             {
                 TilePositionsProperty.DeleteArrayElementAtIndex(x);
@@ -424,7 +425,10 @@ namespace GridDesigner
 		private void ReplaceTiles()
 		{
             meshPainter.ClearMesh();
-            meshPainter.SetOffset();
+            meshPainter.Enable();
+            
+            // This line is needed because TilePositionsProperty keeps it's values when using UNDO
+            tilePositionsProperty = new SerializedObject(gridBase.storage).FindProperty("tilePositions");
 
             SerializedProperty tempPositions = TilePositionsProperty.Copy(); // copy so we don't iterate the original
             if (tempPositions.isArray)
@@ -455,7 +459,12 @@ namespace GridDesigner
                 }
 
                 AssetDatabase.SaveAssets();
-            }
+            }     
+        }
+        
+        public static Object GetObjectFromInstance(int id)
+        {
+            return EditorUtility.InstanceIDToObject(id);
         }
 	}
 }

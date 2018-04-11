@@ -34,7 +34,17 @@ namespace GridDesigner
             }
         }
 
-        private void Start()
+        public static void SetMesh(Mesh mesh)
+        {
+            Instance.GetComponent<MeshFilter>().sharedMesh = mesh;
+        }
+
+        public static Mesh GetMesh()
+        {
+            return Instance.GetComponent<MeshFilter>().sharedMesh;
+        }
+
+        private void OnEnable()
         {
             if (disableMeshRenderersAtStart)
             {

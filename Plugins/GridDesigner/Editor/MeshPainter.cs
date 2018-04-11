@@ -7,41 +7,35 @@ namespace GridDesigner
     public class MeshPainter
     {
         private Mesh mesh;
-        private GridBaseEditor editor;
+
         private float offset = 0.5f;
 
-        public void Enable(GridBaseEditor editor)
+        public void Enable()
         {
-            this.editor = editor;
-            mesh = editor.GetMesh();
             SetOffset();
         }
 
         public void SetOffset()
         {
-            offset = editor.tileScale.floatValue / 2f;
-        }
-
-        public void Disable()
-        {
-            //Debug.Log(GridBase.Instance.tilePositions[0] + "Disable");
+            offset = GridBase.Instance.tileScale / 2f;
         }
 
         public void ClearMesh()
         {
-            mesh.Clear();
+            GridBase.GetMesh().Clear();
         }
 
         public void DrawTile(Vector3 position)
         {
+            mesh = GridBase.GetMesh();
             int vertsIndex = mesh.vertices.Length;
             Vector3[] newVerts = mesh.vertices;
             System.Array.Resize(ref newVerts, vertsIndex + 4);
 
-            newVerts[vertsIndex] = new Vector3(position.x + offset, position.y + editor.yOffset.floatValue, position.z + offset);
-            newVerts[vertsIndex+1] = new Vector3(position.x + offset, position.y + editor.yOffset.floatValue, position.z - offset);
-            newVerts[vertsIndex+2] = new Vector3(position.x - offset, position.y + editor.yOffset.floatValue, position.z + offset);
-            newVerts[vertsIndex+3] = new Vector3(position.x - offset, position.y + editor.yOffset.floatValue, position.z - offset);
+            newVerts[vertsIndex] = new Vector3(position.x + offset, position.y + GridBase.Instance.yOffset, position.z + offset);
+            newVerts[vertsIndex+1] = new Vector3(position.x + offset, position.y + GridBase.Instance.yOffset, position.z - offset);
+            newVerts[vertsIndex+2] = new Vector3(position.x - offset, position.y + GridBase.Instance.yOffset, position.z + offset);
+            newVerts[vertsIndex+3] = new Vector3(position.x - offset, position.y + GridBase.Instance.yOffset, position.z - offset);
 
             int trisIndex = mesh.triangles.Length;
             int[] newTris = mesh.triangles;
@@ -68,11 +62,12 @@ namespace GridDesigner
             mesh.triangles = newTris;
             mesh.uv = newUv;
 
-            editor.SetMesh(mesh);
+            GridBase.SetMesh(mesh);
         }
 
         public void UndrawTile(Vector3 position)
         {
+            mesh = GridBase.GetMesh();
             Vector3[] verts = mesh.vertices;
             int[] tris = mesh.GetTriangles(0);
             Vector2[] uv = mesh.uv;
@@ -112,7 +107,7 @@ namespace GridDesigner
                 mesh.vertices = verts;
                 mesh.triangles = tris;
                 mesh.uv = uv;
-                editor.SetMesh(mesh);
+                GridBase.SetMesh(mesh);
             }
         }
 
